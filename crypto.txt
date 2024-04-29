@@ -75,6 +75,135 @@ public class Main {
     }
 }
 3.	Hello, My name is Bob, Lieutenant of Indian Airforce. I wish to attack the terrorist’s secret place. My message is "Bomb destroy at Toga". I want to send this message as an encrypted form with a block cipher, substitution cipher. Construct a 5x5 matrix with the key "attack". Implement a suitable algorithm to decrypt the message.
+import java.util.Scanner;
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+
+        // Get key from user
+        System.out.print("Enter key: ");
+        String key = sc.nextLine();
+
+        // Create PlayfairCipher object
+        PlayfairCipher cipher = new PlayfairCipher(key);
+
+        // Get message from user
+        System.out.print("Enter message: ");
+        String msg = sc.nextLine();
+
+        // Encrypt and print message
+        String encMsg = cipher.enc(msg);
+        System.out.println("Encrypted message: " + encMsg);
+
+        // Decrypt and print encrypted message
+        String decMsg = cipher.dec(encMsg);
+        System.out.println("Decrypted message: " + decMsg);
+
+        sc.close();
+    }
+}
+
+class PlayfairCipher {
+    private char[][] keyMat;
+
+    public PlayfairCipher(String key) {
+        // Remove duplicates from key
+        key = key.replaceAll("[^a-zA-Z]", "").toUpperCase().replace("J", "I");
+        StringBuilder keyBldr = new StringBuilder(key);
+        for (char c = 'A'; c <= 'Z'; c++) {
+            if (c != 'J' && keyBldr.indexOf(String.valueOf(c)) == -1) {
+                keyBldr.append(c);
+            }
+        }
+        key = keyBldr.toString();
+
+        // Create 5x5 key matrix
+        keyMat = new char[5][5];
+        int idx = 0;
+        for (int i = 0; i < 5; i++) {
+            for (int j = 0; j < 5; j++) {
+                keyMat[i][j] = key.charAt(idx++);
+            }
+        }
+    }
+
+    private String normMsg(String msg) {
+        msg = msg.toUpperCase().replaceAll("[^a-zA-Z]", "").replace("J", "I");
+        StringBuilder normMsgBldr = new StringBuilder(msg);
+        for (int i = 0; i < normMsgBldr.length() - 1; i += 2) {
+            if (normMsgBldr.charAt(i) == normMsgBldr.charAt(i + 1)) {
+                normMsgBldr.insert(i + 1, 'X');
+            }
+        }
+        if (normMsgBldr.length() % 2 != 0) {
+            normMsgBldr.append('X');
+        }
+        return normMsgBldr.toString();
+    }
+
+    private int[] findCh(char c) {
+        for (int i = 0; i < 5; i++) {
+            for (int j = 0; j < 5; j++) {
+                if (keyMat[i][j] == c) {
+                    return new int[]{i, j};
+                }
+            }
+        }
+        return null;
+    }
+
+    public String enc(String msg) {
+        StringBuilder encTxt = new StringBuilder();
+        msg = normMsg(msg);
+        for (int i = 0; i < msg.length(); i += 2) {
+            char first = msg.charAt(i);
+            char second = msg.charAt(i + 1);
+            int[] posFirst = findCh(first);
+            int[] posSecond = findCh(second);
+            if (posFirst != null && posSecond != null) {
+                if (posFirst[0] == posSecond[0]) { // Same row
+                    encTxt.append(keyMat[posFirst[0]][(posFirst[1] + 1) % 5]);
+                    encTxt.append(keyMat[posSecond[0]][(posSecond[1] + 1) % 5]);
+                } else if (posFirst[1] == posSecond[1]) { // Same column
+                    encTxt.append(keyMat[(posFirst[0] + 1) % 5][posFirst[1]]);
+                    encTxt.append(keyMat[(posSecond[0] + 1) % 5][posSecond[1]]);
+                } else { // Forming a rectangle
+                    encTxt.append(keyMat[posFirst[0]][posSecond[1]]);
+                    encTxt.append(keyMat[posSecond[0]][posFirst[1]]);
+                }
+            } else {
+                encTxt.append(first).append(second);
+            }
+        }
+        return encTxt.toString();
+    }
+
+    public String dec(String encTxt) {
+        StringBuilder decTxt = new StringBuilder();
+        for (int i = 0; i < encTxt.length(); i += 2) {
+            char first = encTxt.charAt(i);
+            char second = encTxt.charAt(i + 1);
+            int[] posFirst = findCh(first);
+            int[] posSecond = findCh(second);
+            if (posFirst != null && posSecond != null) {
+                if (posFirst[0] == posSecond[0]) { // Same row
+                    decTxt.append(keyMat[posFirst[0]][(posFirst[1] - 1 + 5) % 5]);
+                    decTxt.append(keyMat[posSecond[0]][(posSecond[1] - 1 + 5) % 5]);
+                } else if (posFirst[1] == posSecond[1]) { // Same column
+                    decTxt.append(keyMat[(posFirst[0] - 1 + 5) % 5][posFirst[1]]);
+                    decTxt.append(keyMat[(posSecond[0] - 1 + 5) % 5][posSecond[1]]);
+                } else { // Forming a rectangle
+                    decTxt.append(keyMat[posFirst[0]][posSecond[1]]);
+                    decTxt.append(keyMat[posSecond[0]][posFirst[1]]);
+                }
+            } else {
+                decTxt.append(first).append(second);
+            }
+        }
+        return decTxt.toString();
+    }
+}
 4.	A secret message encrypted using the polyalphabetic substitution cipher with a keyword of “SECURITY” results in the ciphertext "KRIJY RAVOL TTHJC IRXXE". The keyword is known to contain only uppercase English letters. Decrypt the message and determine the original plaintext.
 import java.util.Scanner;
 
@@ -151,6 +280,134 @@ public class Main {
     }
 }
 6.	I am a kind of substitution cipher. Use the key “COPYRIGHT” to construct a key matrix of size 5*5 ,identify the type of cipher and encrypt the message “Server is under attack”.
+import java.util.Scanner;
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+
+        // Get key from user
+        System.out.print("Enter key: ");
+        String key = sc.nextLine();
+
+        // Create PlayfairCipher object
+        PlayfairCipher cipher = new PlayfairCipher(key);
+
+        // Get message from user
+        System.out.print("Enter message: ");
+        String msg = sc.nextLine();
+
+        // Encrypt and print message
+        String encMsg = cipher.encrypt(msg);
+        System.out.println("Encrypted message: " + encMsg);
+
+        sc.close();
+    }
+}
+
+class PlayfairCipher {
+    private char[][] keyMatrix;
+
+    public PlayfairCipher(String key) {
+        // Remove duplicates from key and construct key matrix
+        key = key.replaceAll("[^a-zA-Z]", "").toUpperCase().replace("J", "I");
+        keyMatrix = new char[5][5];
+        int row = 0, col = 0;
+        boolean[] visited = new boolean[26];
+        for (char c : key.toCharArray()) {
+            if (!visited[c - 'A'] && c != ' ') {
+                keyMatrix[row][col] = c;
+                visited[c - 'A'] = true;
+                col++;
+                if (col == 5) {
+                    col = 0;
+                    row++;
+                }
+            }
+        }
+        for (char c = 'A'; c <= 'Z'; c++) {
+            if (c != 'J' && !visited[c - 'A']) {
+                keyMatrix[row][col] = c;
+                col++;
+                if (col == 5) {
+                    col = 0;
+                    row++;
+                }
+            }
+        }
+    }
+
+    private String preprocessMessage(String message) {
+        // Remove non-alphabetic characters and convert to uppercase
+        return message.replaceAll("[^a-zA-Z]", "").toUpperCase().replace("J", "I");
+    }
+
+    private String[] splitPairs(String message) {
+        // Split message into pairs of letters
+        int len = message.length();
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < len; i++) {
+            sb.append(message.charAt(i));
+            if (i + 1 < len && message.charAt(i) == message.charAt(i + 1)) {
+                sb.append('X');
+            }
+        }
+        String formattedMsg = sb.toString();
+        if (formattedMsg.length() % 2 != 0) {
+            formattedMsg += 'X'; // Add 'X' if message length is odd
+        }
+        String[] pairs = new String[formattedMsg.length() / 2];
+        for (int i = 0, j = 0; i < formattedMsg.length(); i += 2, j++) {
+            pairs[j] = formattedMsg.substring(i, i + 2);
+        }
+        return pairs;
+    }
+
+    private String encryptPair(String pair) {
+        // Encrypt a pair of letters
+        char first = pair.charAt(0);
+        char second = pair.charAt(1);
+        int[] posFirst = findPosition(first);
+        int[] posSecond = findPosition(second);
+        int rowFirst = posFirst[0];
+        int colFirst = posFirst[1];
+        int rowSecond = posSecond[0];
+        int colSecond = posSecond[1];
+
+        if (rowFirst == rowSecond) { // Same row
+            return String.valueOf(keyMatrix[rowFirst][(colFirst + 1) % 5]) + keyMatrix[rowSecond][(colSecond + 1) % 5];
+        } else if (colFirst == colSecond) { // Same column
+            return String.valueOf(keyMatrix[(rowFirst + 1) % 5][colFirst]) + keyMatrix[(rowSecond + 1) % 5][colSecond];
+        } else { // Forming a rectangle
+            return String.valueOf(keyMatrix[rowFirst][colSecond]) + keyMatrix[rowSecond][colFirst];
+        }
+    }
+
+    public String encrypt(String message) {
+        // Encrypt the message
+        StringBuilder encryptedMsg = new StringBuilder();
+        String[] pairs = splitPairs(preprocessMessage(message));
+        for (String pair : pairs) {
+            encryptedMsg.append(encryptPair(pair));
+        }
+        return encryptedMsg.toString();
+    }
+
+    private int[] findPosition(char letter) {
+        // Find position of a letter in the key matrix
+        int[] pos = new int[2];
+        for (int i = 0; i < 5; i++) {
+            for (int j = 0; j < 5; j++) {
+                if (keyMatrix[i][j] == letter) {
+                    pos[0] = i;
+                    pos[1] = j;
+                    return pos;
+                }
+            }
+        }
+        return pos;
+    }
+}
 7.	Bob wants to communicate with Alice through the secret matrix to transfer a message “Meet Me”. Bob uses little matrix manipulation to make the encryption more complex. Help Bob to encrypt the message.
 Key matrix =  
 import java.util.Scanner;
@@ -424,32 +681,29 @@ public class Main {
   }
 }
 13.	Alice and Bob wants to communicate securely. They want to use block cipher technique with key size 64 bit is converted into 56 bit key. Identify the symmetric encryption method used by them and implement the encryption mechanism using the plain text “We are in danger”.
-import javax.crypto.Cipher;
+import javax.crypto.*;
 import javax.crypto.spec.SecretKeySpec;
-import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 
 public class Main {
+  public static void main(String[] args) throws Exception {
+    // Generate a key with at least 8 bytes (64 bits)
+    byte[] keyBytes = "12345678".getBytes(); // 8 bytes (64-bit key)
 
-    public static void main(String[] args) {
-        try {
-            String plainText = "We are in danger";
-            String secretKey = "mySecretKey123456"; // 128-bit key
+    // Create DES key
+    SecretKey key = new SecretKeySpec(keyBytes, "DES");
 
-            // Encrypt
-            String encryptedText = encrypt(plainText, secretKey);
-            System.out.println("Encrypted: " + encryptedText);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
+        // Create Cipher instance and initialize it for encryption
+        Cipher cipher = Cipher.getInstance("DES/ECB/PKCS5Padding");
+        cipher.init(Cipher.ENCRYPT_MODE, key);
 
-    public static String encrypt(String plainText, String secretKey) throws Exception {
-        SecretKeySpec keySpec = new SecretKeySpec(secretKey.getBytes(StandardCharsets.UTF_8), "AES");
-        Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
-        cipher.init(Cipher.ENCRYPT_MODE, keySpec);
-        byte[] encryptedBytes = cipher.doFinal(plainText.getBytes(StandardCharsets.UTF_8));
-        return Base64.getEncoder().encodeToString(encryptedBytes);
+        // Encrypt the plaintext
+        String plaintext = "We are in danger";
+        byte[] encryptedBytes = cipher.doFinal(plaintext.getBytes());
+
+        // Convert the encrypted bytes to Base64 for better display
+        String encryptedText = Base64.getEncoder().encodeToString(encryptedBytes);
+        System.out.println("Encrypted text: " + encryptedText);
     }
 }
 14.	An asymmetric encryption algorithm is used to encrypt the message 87. Generate the required global parameters, public and private key to perform encryption.
